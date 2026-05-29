@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 Stasera si gioca</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0d0b; --surface:#1a1612; --surface2:#221e18; --border:#3a3020;
+  --gold:#c9a84c; --gold2:#e8c97a; --red:#8b2e2e; --red2:#c44040;
+  --green:#2e6b3e; --green2:#4a9e60; --text:#e8dcc8; --text2:#a09070; --text3:#5a5040;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Crimson Pro',Georgia,serif;font-size:17px;min-height:100vh;}
+
+header{background:linear-gradient(180deg,#1a1410 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:24px 20px 20px;text-align:center;position:relative;}
+header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+header h1{font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:var(--gold2);letter-spacing:3px;text-transform:uppercase;}
+header p{color:var(--text2);font-style:italic;font-size:14px;margin-top:4px;}
+
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.tab{flex:1;min-width:70px;padding:14px 6px;text-align:center;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;color:var(--text3);border:none;background:none;border-bottom:2px solid transparent;transition:all 0.2s;text-transform:uppercase;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);background:var(--surface2);}
+.tab-icon{display:block;font-size:18px;margin-bottom:4px;}
+
+.panel{display:none;padding:20px 16px;}
+.panel.active{display:block;}
+
+.section-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+/* CHIPS */
+.filter-group{margin-bottom:20px;}
+.filter-label{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;display:block;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:7px 14px;border:1px solid var(--border);border-radius:2px;background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;transition:all 0.15s;font-family:'Crimson Pro',serif;}
+.chip:hover{border-color:var(--gold);color:var(--text);}
+.chip.active{background:var(--gold);border-color:var(--gold);color:var(--bg);font-weight:600;}
+
+/* BUTTONS */
+.suggest-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--red) 0%,#6b1e1e 100%);border:1px solid var(--red2);color:var(--text);font-family:'Cinzel',serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:all 0.2s;}
+.suggest-btn:hover{background:linear-gradient(135deg,var(--red2) 0%,var(--red) 100%);}
+.btn-small{flex:1;padding:10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:13px;cursor:pointer;font-family:'Crimson Pro',serif;transition:all 0.15s;text-align:center;}
+.btn-small:hover{border-color:var(--gold);color:var(--gold);}
+.btn-small.primary{background:var(--green);border-color:var(--green2);color:var(--text);}
+.btn-small.primary:hover{background:var(--green2);}
+
+/* RESULT CARD */
+.result-card{background:var(--surface2);border:1px solid var(--gold);border-radius:2px;padding:20px;margin-top:20px;display:none;animation:fadeIn 0.4s ease;}
+.result-card.visible{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.result-card .game-name{font-family:'Cinzel',serif;font-size:20px;color:var(--gold2);margin-bottom:6px;}
+.result-card .game-meta{color:var(--text2);font-style:italic;font-size:14px;margin-bottom:12px;}
+.result-card .game-reason{color:var(--text);font-size:15px;line-height:1.6;border-top:1px solid var(--border);padding-top:12px;}
+.result-actions{display:flex;gap:10px;margin-top:14px;}
+
+/* FORMS */
+.log-form{background:var(--surface2);border:1px solid var(--border);padding:16px;margin-bottom:20px;}
+.form-row{margin-bottom:14px;}
+.form-label{display:block;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:6px;}
+select,input[type="date"],input[type="number"],textarea{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 12px;font-family:'Crimson Pro',serif;font-size:15px;appearance:none;-webkit-appearance:none;}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--gold);}
+textarea{resize:vertical;min-height:70px;}
+.rating-stars{display:flex;gap:6px;font-size:24px;cursor:pointer;}
+.star{color:var(--text3);transition:color 0.1s;}
+.star.lit{color:var(--gold);}
+.log-submit{width:100%;padding:14px;background:var(--green);border:1px solid var(--green2);color:var(--text);font-family:'Cinzel',serif;font-size:13px;letter-spacing:1.5px;cursor:pointer;text-transform:uppercase;transition:all 0.2s;}
+.log-submit:hover{background:var(--green2);}
+
+/* PARTITE */
+.partita-item{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--gold);padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.partita-game{font-family:'Cinzel',serif;font-size:14px;color:var(--gold2);margin-bottom:3px;}
+.partita-meta{color:var(--text2);font-size:13px;}
+.partita-note{color:var(--text);font-size:14px;margin-top:6px;font-style:italic;}
+.partita-delete{color:var(--text3);cursor:pointer;font-size:18px;flex-shrink:0;background:none;border:none;padding:0 4px;}
+.partita-delete:hover{color:var(--red2);}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);padding:16px;text-align:center;}
+.stat-box.clickable{cursor:pointer;transition:border-color 0.15s;}
+.stat-box.clickable:hover{border-color:var(--gold);}
+.stat-number{font-family:'Cinzel',serif;font-size:28px;color:var(--gold2);line-height:1;margin-bottom:4px;}
+.stat-label{font-size:12px;color:var(--text2);font-style:italic;}
+.coll-list{display:none;background:var(--surface2);border:1px solid var(--border);border-top:none;margin-bottom:14px;}
+.coll-list.open{display:block;}
+.coll-game-row{padding:9px 16px;border-bottom:1px solid var(--border);font-size:14px;color:var(--text);display:flex;justify-content:space-between;align-items:center;}
+.coll-game-row:last-child{border-bottom:none;}
+.coll-game-time{font-size:12px;color:var(--text3);font-style:italic;}
+.top-game-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;}
+.top-game-row:last-child{border-bottom:none;}
+.top-game-name{color:var(--text);}
+.top-game-count{font-family:'Cinzel',serif;color:var(--gold);font-size:13px;}
+
+/* REGOLAMENTI */
+.reg-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);margin-bottom:8px;gap:10px;}
+.reg-name{font-size:15px;color:var(--text);flex:1;}
+.reg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.reg-dot.ok{background:var(--green2);}
+.reg-dot.rileggi{background:var(--gold);}
+.reg-dot.mai{background:var(--red2);}
+.reg-actions{display:flex;gap:6px;flex-shrink:0;}
+.reg-btn{padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:11px;font-family:'Cinzel',serif;letter-spacing:0.5px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.reg-btn:hover{border-color:var(--gold);color:var(--gold);}
+.reg-btn.active-ok{background:var(--green);border-color:var(--green2);color:var(--text);}
+.reg-btn.active-rileggi{background:var(--gold);border-color:var(--gold2);color:var(--bg);}
+.reg-section-label{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin:16px 0 8px;}
+
+/* CALENDARIO */
+.cal-session{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--gold);padding:14px 16px;margin-bottom:10px;}
+.cal-session.done{border-left-color:var(--green);opacity:0.6;}
+.cal-session.prossima{border-left-color:var(--gold2);box-shadow:0 0 12px rgba(201,168,76,0.15);}
+.cal-session-date{font-family:'Cinzel',serif;font-size:15px;color:var(--gold2);margin-bottom:3px;}
+.cal-session.done .cal-session-date{color:var(--green2);}
+.cal-session-label{font-size:15px;color:var(--text);margin-bottom:2px;}
+.cal-session-tipo{font-size:12px;color:var(--text3);font-style:italic;margin-bottom:10px;}
+.cal-session-actions{display:flex;gap:8px;}
+.cal-btn{flex:1;padding:9px 8px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer;font-family:'Cinzel',serif;letter-spacing:0.5px;transition:all 0.15s;text-align:center;}
+.cal-btn:hover{border-color:var(--gold);color:var(--gold);}
+.cal-btn.green{background:var(--green);border-color:var(--green2);color:var(--text);}
+.cal-btn.green:hover{background:var(--green2);}
+.cal-btn.red{background:var(--red);border-color:var(--red2);color:var(--text);}
+.cal-btn.red:hover{background:var(--red2);}
+.cal-done-badge{display:inline-block;padding:4px 12px;background:var(--green);color:var(--text);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;}
+.cal-reschedule-picker{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:none;}
+.cal-reschedule-picker.open{display:block;}
+.cal-reschedule-picker label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;display:block;margin-bottom:6px;}
+.cal-reschedule-row{display:flex;gap:8px;margin-top:8px;}
+
+/* MISC */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+.empty-state{text-align:center;color:var(--text3);font-style:italic;padding:40px 20px;font-size:15px;}
+.empty-state .empty-icon{font-size:36px;margin-bottom:10px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--gold);color:var(--bg);padding:12px 24px;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:100;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(201,168,76,0.3);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎲 Stasera si gioca</h1>
+  <p>Aury &amp; Christian — la guida alle sessioni</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('suggeritore',this)"><span class="tab-icon">✨</span>Suggerisci</button>
+  <button class="tab" onclick="switchTab('log',this)"><span class="tab-icon">📖</span>Partite</button>
+  <button class="tab" onclick="switchTab('stats',this)"><span class="tab-icon">📊</span>Collezione</button>
+  <button class="tab" onclick="switchTab('calendario',this)"><span class="tab-icon">📅</span>Calendario</button>
+  <button class="tab" onclick="switchTab('regolamenti',this)"><span class="tab-icon">📋</span>Regole</button>
+</div>
+
+<!-- SUGGERITORE -->
+<div id="panel-suggeritore" class="panel active">
+  <p class="section-title">Cosa vi va stasera?</p>
+  <div class="filter-group">
+    <span class="filter-label">⏱ Tempo disponibile</span>
+    <div class="chips">
+      <div class="chip" data-group="tempo" data-val="30">~30 min</div>
+      <div class="chip" data-group="tempo" data-val="60">~1 ora</div>
+      <div class="chip" data-group="tempo" data-val="120">~2 ore</div>
+      <div class="chip" data-group="tempo" data-val="180">Lunga serata</div>
+      <div class="chip" data-group="tempo" data-val="999">Maratona</div>
+    </div>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">🎭 Umore</span>
+    <div class="chips">
+      <div class="chip" data-group="umore" data-val="narrativo">Narrativo</div>
+      <div class="chip" data-group="umore" data-val="strategico">Strategico</div>
+      <div class="chip" data-group="umore" data-val="leggero">Leggero</div>
+      <div class="chip" data-group="umore" data-val="esplorazione">Esplorazione</div>
+      <div class="chip" data-group="umore" data-val="cooperativo">Cooperativo</div>
+      <div class="chip" data-group="umore" data-val="gestionale">Gestionale</div>
+    </div>
+  </div>
+  <button class="suggest-btn" onclick="suggerisci()"><span id="suggest-label">🎲 Suggerisci</span></button>
+  <div class="result-card" id="result-card">
+    <div class="game-name" id="result-name"></div>
+    <div class="game-meta" id="result-meta"></div>
+    <div class="game-reason" id="result-reason"></div>
+    <div class="result-actions">
+      <button class="btn-small" onclick="suggerisci()">Altro →</button>
+      <button class="btn-small primary" onclick="logFromSuggest()">✓ Giochiamo!</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG PARTITE -->
+<div id="panel-log" class="panel">
+  <p class="section-title">Aggiungi partita</p>
+  <div class="log-form">
+    <div class="form-row">
+      <label class="form-label">Gioco</label>
+      <select id="log-game"><option value="">— scegli il gioco —</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Data</label>
+      <input type="date" id="log-date">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Voto sessione</label>
+      <div class="rating-stars" id="log-stars">
+        <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+        <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Note (opzionale)</label>
+      <textarea id="log-note" placeholder="Com'è andata? Qualcosa di memorabile?"></textarea>
+    </div>
+    <button class="log-submit" onclick="addPartita()">Salva partita</button>
+  </div>
+  <hr class="divider">
+  <p class="section-title">Storico</p>
+  <div id="partite-list"></div>
+</div>
+
+<!-- STATS / COLLEZIONE -->
+<div id="panel-stats" class="panel">
+  <p class="section-title">La vostra collezione</p>
+  <div class="stats-grid">
+    <div class="stat-box clickable" onclick="toggleColl('posseduti')">
+      <div class="stat-number" id="stat-posseduti">—</div>
+      <div class="stat-label">Posseduti ▾</div>
+    </div>
+    <div class="stat-box clickable" onclick="toggleColl('arrivo')">
+      <div class="stat-number" id="stat-arrivo">—</div>
+      <div class="stat-label">In arrivo ▾</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="stat-giocati">—</div>
+      <div class="stat-label">Titoli giocati</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="stat-partite">—</div>
+      <div class="stat-label">Partite totali</div>
+    </div>
+  </div>
+
+  <div class="coll-list" id="coll-posseduti"></div>
+  <div class="coll-list" id="coll-arrivo"></div>
+
+  <hr class="divider">
+  <p class="section-title">Giochi più giocati</p>
+  <div id="top-games"></div>
+</div>
+
+<!-- CALENDARIO -->
+<div id="panel-calendario" class="panel">
+  <p class="section-title">Calendario sessioni</p>
+
+  <div id="cal-campagne-box" style="background:var(--surface2);border:1px solid var(--gold);padding:14px 16px;margin-bottom:16px;">
+    <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold2);letter-spacing:1px;margin-bottom:10px;">⚔️ CAMPAGNE ATTIVE</div>
+    <div id="cal-campagne-list" style="font-size:14px;color:var(--text);"></div>
+  </div>
+
+  <button onclick="regenerateCalendar()" style="width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1.5px;cursor:pointer;margin-bottom:16px;text-transform:uppercase;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">🔄 Rigenera calendario</button>
+
+  <div id="cal-list"></div>
+</div>
+
+<!-- REGOLAMENTI -->
+<div id="panel-regolamenti" class="panel">
+  <p class="section-title">Stato regolamenti</p>
+
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;font-size:13px;">
+    <span style="display:flex;align-items:center;gap:5px;color:var(--text2)"><span style="color:var(--green2)">●</span> Pronti</span>
+    <span style="display:flex;align-items:center;gap:5px;color:var(--text2)"><span style="color:var(--gold)">●</span> Da rileggere</span>
+    <span style="display:flex;align-items:center;gap:5px;color:var(--text2)"><span style="color:var(--red2)">●</span> Mai giocati</span>
+  </div>
+
+  <div id="reg-list"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// COLLEZIONE
+// ============================================================
+const COLLEZIONE = [
+  {nome:"Paleo",tempo:60,tipo:"corta",tags:["cooperativo","narrativo","esplorazione"]},
+  {nome:"Grimcoven",tempo:180,tipo:"lunga",tags:["cooperativo","narrativo","esplorazione"]},
+  {nome:"Nova Aetas Renaissance",tempo:240,tipo:"campagna",attiva:true,tags:["narrativo","esplorazione","strategico"]},
+  {nome:"Mithwind",tempo:999,tipo:"corta",tags:["narrativo","esplorazione","cooperativo"]},
+  {nome:"Tainted Grail",tempo:150,tipo:"campagna",attiva:false,tags:["narrativo","esplorazione","cooperativo"]},
+  {nome:"Bones War",tempo:90,tipo:"corta",tags:["strategico","gestionale"]},
+  {nome:"Inferno",tempo:120,tipo:"lunga",tags:["strategico","esplorazione"]},
+  {nome:"Rewild South America",tempo:60,tipo:"corta",tags:["gestionale","leggero"]},
+  {nome:"Robinson Crusoe",tempo:120,tipo:"lunga",tags:["cooperativo","narrativo","esplorazione","strategico"]},
+  {nome:"The Witcher: Il Vecchio Mondo",tempo:120,tipo:"lunga",tags:["narrativo","esplorazione","strategico"]},
+  {nome:"Ark Nova",tempo:120,tipo:"lunga",tags:["gestionale","strategico"]},
+  {nome:"Too Many Bones",tempo:120,tipo:"lunga",tags:["cooperativo","strategico","narrativo"]},
+  {nome:"Mice and Mystics",tempo:90,tipo:"campagna",attiva:false,tags:["cooperativo","narrativo"]},
+  {nome:"Trudvang Legends",tempo:120,tipo:"campagna",attiva:false,tags:["cooperativo","narrativo","esplorazione"]},
+  {nome:"Sea Salt & Paper",tempo:30,tipo:"corta",tags:["leggero"]},
+  {nome:"Koi",tempo:30,tipo:"corta",tags:["leggero","gestionale"]},
+  {nome:"Ark Nova: Santuario",tempo:120,tipo:"corta",tags:["gestionale","strategico"]},
+  {nome:"Dungeonology",tempo:90,tipo:"lunga",tags:["cooperativo","narrativo","esplorazione"]},
+  {nome:"Fate Forge",tempo:120,tipo:"campagna",attiva:false,tags:["narrativo","esplorazione","cooperativo"]},
+  {nome:"Forest Shuffle",tempo:60,tipo:"corta",tags:["gestionale","leggero"]},
+  {nome:"Now or Never",tempo:150,tipo:"campagna",attiva:false,tags:["narrativo","cooperativo","esplorazione"]},
+  {nome:"e-Mission",tempo:60,tipo:"lunga",tags:["gestionale","cooperativo"]},
+  {nome:"Everdell Duo",tempo:60,tipo:"corta",tags:["gestionale","leggero"]},
+  {nome:"Farshore",tempo:60,tipo:"corta",tags:["gestionale","esplorazione"]},
+  {nome:"Takenoko",tempo:45,tipo:"corta",tags:["gestionale","leggero"]},
+  {nome:"Bitoku",tempo:120,tipo:"lunga",tags:["gestionale","narrativo"]},
+  {nome:"Living Forest",tempo:40,tipo:"corta",tags:["gestionale","cooperativo"]},
+  {nome:"Honey Buzz",tempo:40,tipo:"corta",tags:["gestionale","leggero"]},
+];
+
+// ============================================================
+// STORAGE
+// ============================================================
+function load(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;}}
+function save(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+
+let partite = load('partite',[]);
+let calSlots = load('calSlots',[]);
+let logRating = 0;
+let lastSuggested = null;
+
+// Regolamenti — caricati subito così isGiocabile è disponibile ovunque
+const STATI_DEFAULT = {
+  "Paleo":"ok","Grimcoven":"ok","Nova Aetas Renaissance":"ok","Mithwind":"ok",
+  "Tainted Grail":"ok","Inferno":"ok","Rewild South America":"ok","Ark Nova":"ok",
+  "The Witcher: Il Vecchio Mondo":"rileggi","Too Many Bones":"rileggi",
+  "Mice and Mystics":"rileggi","Trudvang Legends":"rileggi","Farshore":"rileggi",
+  "Takenoko":"rileggi","Bitoku":"rileggi",
+  "Bones War":"mai","Robinson Crusoe":"mai","Sea Salt & Paper":"mai","Koi":"mai",
+  "Ark Nova: Santuario":"mai","Dungeonology":"mai","Fate Forge":"mai",
+  "Forest Shuffle":"mai","Now or Never":"mai","e-Mission":"mai",
+  "Everdell Duo":"mai","Living Forest":"mai","Honey Buzz":"mai"
+};
+let regStati = load('regStati', STATI_DEFAULT);
+COLLEZIONE.forEach(g=>{ if(!regStati[g.nome]) regStati[g.nome]='mai'; });
+function isGiocabile(nome){ return (regStati[nome]||'mai')!=='mai'; }
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+  if(id==='log') renderPartite();
+  if(id==='stats') renderStats();
+  if(id==='calendario') initCalendar();
+  if(id==='regolamenti') renderRegolamenti();
+}
+
+// ============================================================
+// CHIPS
+// ============================================================
+document.querySelectorAll('.chip').forEach(chip=>{
+  chip.addEventListener('click',()=>{
+    const g=chip.dataset.group;
+    document.querySelectorAll(`.chip[data-group="${g}"]`).forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+  });
+});
+function getChip(group){const a=document.querySelector(`.chip.active[data-group="${group}"]`);return a?a.dataset.val:null;}
+
+// ============================================================
+// SUGGERITORE
+// ============================================================
+async function suggerisci() {
+  const tempo=getChip('tempo'), umore=getChip('umore');
+  let candidati=COLLEZIONE.filter(g=>g.tipo!=='campagna' && isGiocabile(g.nome));
+  if(tempo){
+    const m=parseInt(tempo);
+    candidati=candidati.filter(g=>{
+      if(m===30) return g.tipo==='corta';
+      if(m===60) return g.tipo==='corta';
+      if(m===120) return true; // qualsiasi
+      if(m===180) return g.tipo==='lunga'; // lunga serata = solo giochi lunghi
+      return true; // maratona = tutti
+    });
+  }
+  if(umore){
+    const scored=candidati.map(g=>({...g,score:g.tags.includes(umore)?2:0}));
+    scored.sort((a,b)=>b.score-a.score+(Math.random()-0.5)*0.5);
+    candidati=scored.filter(g=>g.score>0).length>0?scored.filter(g=>g.score>0):scored;
+  } else {
+    candidati=candidati.sort(()=>Math.random()-0.5);
+  }
+  if(candidati.length===0){showToast('Nessun gioco trovato!');return;}
+  const diversi=candidati.filter(g=>!lastSuggested||g.nome!==lastSuggested);
+  const gioco=(diversi.length>0?diversi:candidati)[0];
+  lastSuggested=gioco.nome;
+
+  const btn=document.getElementById('suggest-label');
+  btn.innerHTML='<span class="spinner"></span>Sto pensando…';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Sei un consulente di giochi da tavolo entusiasta. Suggerisci "${gioco.nome}" per una serata di Aury e Christian. Aury ama atmosfera forte, narrativo, esplorazione, cooperativi profondi. Christian ama cooperativi profondi, ambientazioni forti. Filtri: tempo=${tempo||'libero'}, umore=${umore||'libero'}. Scrivi UNA frase motivante e personale (max 2 righe). Niente elenchi.`}]})});
+    const data=await resp.json();
+    const testo=data.content?.[0]?.text||'Un ottimo gioco per stasera!';
+    document.getElementById('result-name').textContent=gioco.nome;
+    document.getElementById('result-meta').textContent=`⏱ ${gioco.tempo===999?'durata libera':gioco.tempo+' min'} · ${gioco.tags.join(' · ')}`;
+    document.getElementById('result-reason').textContent=testo;
+    document.getElementById('result-card').classList.add('visible');
+  }catch(e){
+    document.getElementById('result-name').textContent=gioco.nome;
+    document.getElementById('result-meta').textContent=`⏱ ${gioco.tempo===999?'durata libera':gioco.tempo+' min'} · ${gioco.tags.join(' · ')}`;
+    document.getElementById('result-reason').textContent='Un ottimo gioco per questa serata!';
+    document.getElementById('result-card').classList.add('visible');
+  }
+  btn.innerHTML='🎲 Suggerisci';
+}
+
+function logFromSuggest(){
+  if(!lastSuggested)return;
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.remove('active');if(i===1)t.classList.add('active');});
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-log').classList.add('active');
+  const sel=document.getElementById('log-game');
+  for(let o of sel.options){if(o.value===lastSuggested){sel.value=lastSuggested;break;}}
+  renderPartite();
+}
+
+// ============================================================
+// LOG PARTITE
+// ============================================================
+function initLogForm(){
+  const sel=document.getElementById('log-game');
+  COLLEZIONE.sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(g=>{
+    const o=document.createElement('option');o.value=g.nome;o.textContent=g.nome;sel.appendChild(o);
+  });
+  document.getElementById('log-date').value=new Date().toISOString().split('T')[0];
+  document.querySelectorAll('#log-stars .star').forEach(star=>{
+    star.addEventListener('click',()=>{logRating=parseInt(star.dataset.v);updateStars();});
+    star.addEventListener('mouseover',()=>{const v=parseInt(star.dataset.v);document.querySelectorAll('#log-stars .star').forEach(s=>s.classList.toggle('lit',parseInt(s.dataset.v)<=v));});
+    star.addEventListener('mouseout',()=>updateStars());
+  });
+}
+function updateStars(){document.querySelectorAll('#log-stars .star').forEach(s=>s.classList.toggle('lit',parseInt(s.dataset.v)<=logRating));}
+function addPartita(){
+  const game=document.getElementById('log-game').value;
+  const date=document.getElementById('log-date').value;
+  const note=document.getElementById('log-note').value.trim();
+  if(!game){showToast('Scegli un gioco!');return;}
+  partite.unshift({game,date,rating:logRating,note,id:Date.now()});
+  save('partite',partite);
+  document.getElementById('log-note').value='';
+  logRating=0;updateStars();renderPartite();showToast('Partita salvata! 🎲');
+}
+function renderPartite(){
+  const list=document.getElementById('partite-list');
+  if(partite.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">📖</div>Nessuna partita ancora.</div>';return;}
+  list.innerHTML=partite.map(p=>`<div class="partita-item"><div style="flex:1"><div class="partita-game">${p.game}</div><div class="partita-meta">${fmtDate(p.date)}${p.rating?' · '+'★'.repeat(p.rating)+'☆'.repeat(5-p.rating):''}</div>${p.note?`<div class="partita-note">"${p.note}"</div>`:''}</div><button class="partita-delete" onclick="deletePartita(${p.id})">×</button></div>`).join('');
+}
+function deletePartita(id){partite=partite.filter(p=>p.id!==id);save('partite',partite);renderPartite();}
+function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');return`${day}/${m}/${y}`;}
+
+// ============================================================
+// STATS
+// ============================================================
+function renderStats(){
+  document.getElementById('stat-posseduti').textContent=COLLEZIONE.length;
+  document.getElementById('stat-arrivo').textContent='—';
+  document.getElementById('stat-giocati').textContent=new Set(partite.map(p=>p.game)).size;
+  document.getElementById('stat-partite').textContent=partite.length;
+
+  const sorted=[...COLLEZIONE].sort((a,b)=>a.nome.localeCompare(b.nome));
+  document.getElementById('coll-posseduti').innerHTML=sorted.map(g=>`<div class="coll-game-row"><span>${g.nome}</span><span class="coll-game-time">${g.tempo===999?'durata libera':'~'+g.tempo+' min'}</span></div>`).join('');
+  document.getElementById('coll-arrivo').innerHTML='';
+
+  const topGames=document.getElementById('top-games');
+  if(partite.length===0){topGames.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon">📊</div>Iniziate a loggare le partite!</div>';return;}
+  const counts={};partite.forEach(p=>{counts[p.game]=(counts[p.game]||0)+1;});
+  topGames.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([g,n])=>`<div class="top-game-row"><span class="top-game-name">${g}</span><span class="top-game-count">${n}×</span></div>`).join('');
+}
+
+function toggleColl(which){
+  const el=document.getElementById('coll-'+which);
+  el.classList.toggle('open');
+}
+
+// ============================================================
+// CALENDARIO
+// ============================================================
+// Campagne attive (attiva:true)
+const CAMPAGNE = COLLEZIONE.filter(g=>g.tipo==='campagna' && g.attiva).map(g=>g.nome);
+// Giochi giocabili = non campagna (campagne in pausa escluse), pronti o da rileggere
+const GIOCHI_INFRA = COLLEZIONE.filter(g=>g.tipo==='corta' && g.tipo!=='campagna' && isGiocabile(g.nome)).map(g=>g.nome);
+const GIOCHI_WEEKEND = COLLEZIONE.filter(g=>g.tipo==='lunga' && isGiocabile(g.nome)).map(g=>g.nome);
+
+function toDS(d){const dd=new Date(d);dd.setHours(12,0,0,0);return dd.toISOString().split('T')[0];}
+function addDays(ds,n){const d=new Date(ds);d.setHours(12,0,0,0);d.setDate(d.getDate()+n);return toDS(d);}
+function dow(ds){const d=new Date(ds);d.setHours(12,0,0,0);return d.getDay();}
+function daysBetween(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+function fmtIT(ds){
+  const[y,m,day]=ds.split('-');
+  const d=new Date(ds);d.setHours(12);
+  const days=['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'];
+  const months=['','gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  return `${days[d.getDay()]} ${parseInt(day)} ${months[parseInt(m)]}`;
+}
+
+function generateCalendar(){
+  const today=toDS(new Date());
+  const horizon=addDays(today,92);
+  calSlots=calSlots.filter(s=>s.status==='done'&&s.dateStr<today);
+  const occupied=new Set(calSlots.map(s=>s.dateStr));
+
+  // Campagne giocabili (rispettano l'ordine regolamenti)
+  const campagneAttive=CAMPAGNE.filter(g=>isGiocabile(g));
+
+  const recentGames=calSlots.filter(s=>s.status==='done').sort((a,b)=>b.dateStr.localeCompare(a.dateStr)).slice(0,6).map(s=>s.game);
+  function rotate(arr){
+    const fresh=arr.filter(g=>!recentGames.includes(g));
+    const stale=arr.filter(g=>recentGames.includes(g));
+    for(let i=fresh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fresh[i],fresh[j]]=[fresh[j],fresh[i]];}
+    return [...fresh,...stale];
+  }
+  const infraPool=rotate(GIOCHI_INFRA);
+  const weekendPool=rotate(GIOCHI_WEEKEND);
+  let infraIdx=0, weekendIdx=0;
+
+  // Traccia ultima sessione per ogni campagna (ogni 14 giorni)
+  const lastCampagna={};
+  campagneAttive.forEach(g=>{
+    const all=calSlots.filter(s=>s.game===g).map(s=>s.dateStr).sort();
+    lastCampagna[g]=all.length>0?all[all.length-1]:null;
+  });
+  // Rotazione campagne: quale campagna tocca al prossimo sabato?
+  let campagnaIdx=0;
+
+  let cursor=today;
+  while(cursor<=horizon){
+    const d=dow(cursor);
+
+    // Martedì(2) e Giovedì(4): sessione corta
+    if((d===2||d===4)&&!occupied.has(cursor)&&infraPool.length>0){
+      const game=infraPool[infraIdx%infraPool.length]; infraIdx++;
+      calSlots.push({id:Date.now()+Math.random(),dateStr:cursor,game,tipo:'infrasettimanale',status:'pending'});
+      occupied.add(cursor);
+    }
+
+    // Sabato(6): campagna ogni 14gg in rotazione, altrimenti weekend lungo
+    if(d===6&&!occupied.has(cursor)){
+      // Cerca se c'è una campagna che "tocca" (≥13 giorni dall'ultima sua sessione)
+      let campagnaScelta=null;
+      if(campagneAttive.length>0){
+        // Prova a partire dall'indice corrente e cerca la prima che tocca
+        for(let i=0;i<campagneAttive.length;i++){
+          const c=campagneAttive[(campagnaIdx+i)%campagneAttive.length];
+          const last=lastCampagna[c];
+          if(!last||daysBetween(last,cursor)>=13){
+            campagnaScelta=c;
+            campagnaIdx=(campagnaIdx+i+1)%campagneAttive.length;
+            break;
+          }
+        }
+      }
+      if(campagnaScelta){
+        calSlots.push({id:Date.now()+Math.random(),dateStr:cursor,game:campagnaScelta,tipo:'campagna',status:'pending'});
+        lastCampagna[campagnaScelta]=cursor;
+      } else if(weekendPool.length>0){
+        const game=weekendPool[weekendIdx%weekendPool.length]; weekendIdx++;
+        calSlots.push({id:Date.now()+Math.random(),dateStr:cursor,game,tipo:'weekend',status:'pending'});
+      }
+      occupied.add(cursor);
+    }
+    cursor=addDays(cursor,1);
+  }
+  save('calSlots',calSlots);
+}
+
+function initCalendar(){
+  const today=toDS(new Date());
+  const hasFuture=calSlots.some(s=>s.status==='pending'&&s.dateStr>=today);
+  if(!hasFuture) generateCalendar();
+  renderCalendar();
+}
+
+function regenerateCalendar(){
+  if(!confirm('Rigenera il calendario? Le sessioni già segnate come giocate restano, quelle future vengono ripianificate.'))return;
+  const today=toDS(new Date());
+  calSlots=calSlots.filter(s=>s.status==='done');
+  save('calSlots',calSlots);
+  generateCalendar();
+  renderCalendar();
+  showToast('Calendario rigenerato! 📅');
+}
+
+function renderCalendar(){
+  const today=toDS(new Date());
+
+  // Box campagne attive
+  const campagneAttive=CAMPAGNE.filter(g=>isGiocabile(g));
+  const campBox=document.getElementById('cal-campagne-list');
+  if(campagneAttive.length===0){
+    campBox.innerHTML='<span style="color:var(--text3);font-style:italic;font-size:13px;">Nessuna campagna attiva — sbloccane una nella sezione Regole!</span>';
+  } else {
+    campBox.innerHTML=campagneAttive.map(g=>{
+      const done=calSlots.filter(s=>s.game===g&&s.status==='done');
+      const last=done.sort((a,b)=>b.dateStr.localeCompare(a.dateStr))[0];
+      const warn=last&&daysBetween(last.dateStr,today)>21;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+        <span>${warn?'⚠️ ':''}${g}</span>
+        <span style="font-size:12px;color:var(--text2);font-style:italic;">${done.length} sess. · ultima: ${last?fmtIT(last.dateStr):'—'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const recentDone=calSlots.filter(s=>s.status==='done').sort((a,b)=>b.dateStr.localeCompare(a.dateStr)).slice(0,3).reverse();
+  const upcoming=calSlots.filter(s=>s.status==='pending'&&s.dateStr>=today).sort((a,b)=>a.dateStr.localeCompare(b.dateStr)).slice(0,20);
+
+  let html='';
+  recentDone.forEach(s=>{
+    const bc=s.tipo==='campagna'?'var(--gold)':s.tipo==='weekend'?'var(--text2)':'var(--text3)';
+    html+=`<div class="cal-session done" style="border-left-color:${bc}"><div class="cal-session-date">✓ ${fmtIT(s.dateStr)}</div><div class="cal-session-label">${s.game}</div><div class="cal-session-tipo">${tipoLabel(s)}</div><span class="cal-done-badge">GIOCATO</span></div>`;
+  });
+  upcoming.forEach((s,i)=>{
+    const isProssima=i===0;
+    const bc=s.tipo==='campagna'?'var(--gold)':s.tipo==='weekend'?'var(--text2)':'var(--text3)';
+    const sid=String(s.id).replace('.','_');
+    html+=`<div class="cal-session${isProssima?' prossima':''}" style="border-left-color:${bc}">
+      <div class="cal-session-date">${isProssima?'⟶ ':''}${fmtIT(s.dateStr)}</div>
+      <div class="cal-session-label">${s.game}</div>
+      <div class="cal-session-tipo">${tipoLabel(s)}</div>
+      <div class="cal-session-actions">
+        <button class="cal-btn green" onclick="slotDone('${sid}')">✓ Giocato!</button>
+        <button class="cal-btn red" onclick="slotToggle('${sid}')">↩ Sposta</button>
+        <button class="cal-btn" onclick="slotSkip('${sid}')" style="flex:0;padding:9px 12px;">✕</button>
+      </div>
+      <div class="cal-reschedule-picker" id="crp-${sid}">
+        <label>Nuovo giorno</label>
+        <input type="date" id="crpd-${sid}" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;" value="${addDays(s.dateStr,7)}">
+        <div class="cal-reschedule-row">
+          <button class="cal-btn" onclick="slotReschedule('${sid}')">Conferma</button>
+          <button class="cal-btn" onclick="slotToggle('${sid}')">Annulla</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('cal-list').innerHTML=html||'<div class="empty-state"><div class="empty-icon">📅</div>Nessuna sessione programmata.</div>';
+}
+
+function tipoLabel(s){
+  if(s.tipo==='campagna')return'⚔️ Campagna · weekend · sessione lunga';
+  if(s.tipo==='weekend')return'🎲 Weekend · sessione lunga';
+  return`🌙 Serata ${dow(s.dateStr)===2?'martedì':'giovedì'} · 20:30`;
+}
+function findSlot(sid){return calSlots.find(s=>String(s.id).replace('.','_')===String(sid));}
+function slotDone(sid){
+  const s=findSlot(sid);if(!s)return;
+  s.status='done';save('calSlots',calSlots);
+  partite.unshift({game:s.game,date:s.dateStr,rating:0,note:'',id:Date.now()});save('partite',partite);
+  showToast('Sessione registrata! 🎲');renderCalendar();
+}
+function slotSkip(sid){const s=findSlot(sid);if(!s)return;s.status='skipped';save('calSlots',calSlots);showToast('Saltata.');renderCalendar();}
+function slotToggle(sid){document.getElementById('crp-'+sid)?.classList.toggle('open');}
+function slotReschedule(sid){
+  const s=findSlot(sid);if(!s)return;
+  const nd=document.getElementById('crpd-'+sid)?.value;
+  if(!nd){showToast('Scegli una data!');return;}
+  s.dateStr=nd;save('calSlots',calSlots);showToast('Spostata! 📅');renderCalendar();
+}
+
+// ============================================================
+// REGOLAMENTI
+// ============================================================
+function regSetStato(nome, stato) {
+  // Toggle: se già attivo, torna a 'mai'
+  regStati[nome] = (regStati[nome] === stato) ? 'mai' : stato;
+  save('regStati', regStati);
+  renderRegolamenti();
+  // Se diventa ok, mostra toast
+  if(regStati[nome]==='ok') showToast(`${nome} pronto! 🎲`);
+}
+
+function renderRegolamenti() {
+  const groups = { ok: [], rileggi: [], mai: [], pausa: [] };
+  COLLEZIONE.forEach(g => {
+    if(g.tipo==='campagna' && !g.attiva){ groups.pausa.push(g); return; }
+    const s = regStati[g.nome] || 'mai';
+    groups[s].push(g);
+  });
+
+  const labels = { ok: '✓ Pronti a giocare', rileggi: '↺ Da rileggere', mai: '✕ Mai giocati', pausa: '⏸ Campagne in pausa' };
+  let html = '';
+
+  ['mai','rileggi','ok','pausa'].forEach(stato => {
+    if(groups[stato].length === 0) return;
+    html += `<div class="reg-section-label">${labels[stato]} (${groups[stato].length})</div>`;
+    groups[stato].sort((a,b)=>a.nome.localeCompare(b.nome)).forEach(g => {
+      if(stato==='pausa'){
+        html += `<div class="reg-item"><div class="reg-dot" style="background:var(--text3)"></div><span class="reg-nome" style="font-size:15px;color:var(--text2);flex:1;">${g.nome}</span><span style="font-size:11px;color:var(--text3);font-style:italic;">in pausa</span></div>`;
+      } else {
+        html += `<div class="reg-item">
+          <div class="reg-dot ${stato}"></div>
+          <span class="reg-nome" style="font-size:15px;color:var(--text);flex:1;">${g.nome}</span>
+          <div class="reg-actions">
+            <button class="reg-btn${regStati[g.nome]==='ok'?' active-ok':''}" onclick="regSetStato('${g.nome}','ok')">✓ Pronto</button>
+            <button class="reg-btn${regStati[g.nome]==='rileggi'?' active-rileggi':''}" onclick="regSetStato('${g.nome}','rileggi')">↺ Rileggi</button>
+          </div>
+        </div>`;
+      }
+    });
+  });
+
+  document.getElementById('reg-list').innerHTML = html;
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ============================================================
+// INIT
+// ============================================================
+initLogForm();
+</script>
+</body>
+</html>
